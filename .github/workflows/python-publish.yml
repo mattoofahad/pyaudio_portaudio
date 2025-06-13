@@ -3,7 +3,7 @@ name: Build, Publish to PyPI, and Create GitHub Release (Windows)
 on:
   push:
     branches:
-      - main
+      - master
   workflow_dispatch:
 
 jobs:
