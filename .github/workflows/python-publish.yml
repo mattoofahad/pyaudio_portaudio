@@ -34,7 +34,8 @@ jobs:
         run: |
           cd pyaudio
           msbuild portaudio-v19/build/msvc/portaudio.sln /p:Configuration=ReleaseDLL;Platform=${{ matrix.arch }}
-
+        shell: cmd
+        
       - name: Install build dependencies
         run: pip install --upgrade pip setuptools wheel build twine
 
