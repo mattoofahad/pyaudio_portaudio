@@ -1,3 +1,11 @@
+name: Build, Publish to PyPI, and Create GitHub Release
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -50,3 +58,4 @@ jobs:
           generate_release_notes: true
           files: |
             dist/*
+
