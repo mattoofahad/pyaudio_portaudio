@@ -20,7 +20,7 @@ jobs:
 
       - name: Download and extract PortAudio binaries
         run: |
-          curl -L -o portaudio.zip https://github.com/spatialaudio/portaudio-binaries/releases/download/v19.7.0/portaudio-v19.7.0-win64.zip
+          curl -L -o portaudio.zip https://github.com/PortAudio/portaudio/archive/refs/tags/v19.7.0.zip
           7z x portaudio.zip -oportaudio
         shell: bash
 
