@@ -42,7 +42,7 @@ jobs:
       - name: Build wheel and sdist
         run: |
           cd pyaudio
-          set INCLUDE=%cd%\portaudio-v19\include;%INCLUDE%
+          set INCLUDE=%cd%\portaudio-v19\include;
           python -m build
 
       - name: Upload build artifacts
