@@ -3,7 +3,7 @@ name: Build, Publish to PyPI, and Create GitHub Release (Windows)
 on:
   push:
     branches:
-      - master
+      - main
   workflow_dispatch:
 
 jobs:
@@ -18,13 +18,20 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Upgrade pip & install build
-        run: python -m pip install --upgrade pip build
+      - name: Download and extract PortAudio binaries
+        run: |
+          curl -L -o portaudio.zip https://github.com/spatialaudio/portaudio-binaries/releases/download/v19.7.0/portaudio-v19.7.0-win64.zip
+          7z x portaudio.zip -oportaudio
+        shell: bash
 
       - name: Build distributions
         run: |
+          set "INCLUDE=%cd%\portaudio\include;%INCLUDE%"
+          set "LIB=%cd%\portaudio\lib;%LIB%"
           cd pyaudio
+          python -m pip install --upgrade pip build
           python -m build
+        shell: cmd
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
