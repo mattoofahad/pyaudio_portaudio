@@ -2,13 +2,15 @@ name: Build, Publish to PyPI, and Create GitHub Release (Windows)
 
 on:
   push:
-    branches:
-      - master
+    branches: [master]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x64]
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -18,6 +20,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
       - name: Download and extract PortAudio source
         run: |
           curl -L -o portaudio-src.zip https://github.com/PortAudio/portaudio/archive/refs/tags/v19.7.0.zip
@@ -25,16 +30,42 @@ jobs:
           mv portaudio-19.7.0 pyaudio/portaudio-v19
         shell: bash
 
-      - name: Create wheel
+      - name: Build PortAudio with MSBuild
         run: |
           cd pyaudio
           msbuild portaudio-v19/build/msvc/portaudio.sln /p:Configuration=ReleaseDLL;Platform=${{ matrix.arch }}
+
+      - name: Install build dependencies
+        run: pip install --upgrade pip setuptools wheel build twine
+
+      - name: Build wheel and sdist
+        run: |
+          cd pyaudio
+          python -m build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: pyaudio/dist/
+
+  # pypi-release:
+  #   needs: build
+  #   runs-on: windows-latest
+  #   steps:
+  #     - name: Download build artifacts
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: dist
+  #         path: dist/
+
+  #     - name: Publish to PyPI
+  #       env:
+  #         TWINE_USERNAME: __token__
+  #         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+  #       run: |
+  #         pip install twine
+  #         twine upload dist/*
 
   github-release:
     needs: build
@@ -46,12 +77,13 @@ jobs:
           name: dist
           path: dist/
 
-      - name: Get version from dist filename
+      - name: Get version from wheel filename
         id: get_version
+        shell: pwsh
         run: |
-          $file = Get-ChildItem -Path dist\*.tar.gz | Select-Object -First 1
+          $file = Get-ChildItem -Path dist\*.whl | Select-Object -First 1
           if ($file) {
-            if ($file.Name -match "^[^-]+-([0-9]+\.[0-9]+\.[0-9]+)\.tar\.gz$") {
+            if ($file.Name -match "^[^-]+-([0-9]+\.[0-9]+\.[0-9]+)") {
               echo "VERSION=$($matches[1])" >> $env:GITHUB_OUTPUT
             }
           }
