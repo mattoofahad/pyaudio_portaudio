@@ -18,20 +18,17 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Download and extract PortAudio binaries
+      - name: Download and extract PortAudio source
         run: |
-          curl -L -o portaudio.zip https://github.com/PortAudio/portaudio/archive/refs/tags/v19.7.0.zip
-          7z x portaudio.zip -oportaudio
+          curl -L -o portaudio-src.zip https://github.com/PortAudio/portaudio/archive/refs/tags/v19.7.0.zip
+          7z x portaudio-src.zip
+          mv portaudio-19.7.0 pyaudio/portaudio-v19
         shell: bash
 
-      - name: Build distributions
+      - name: Create wheel
         run: |
-          set "INCLUDE=%cd%\portaudio\include;%INCLUDE%"
-          set "LIB=%cd%\portaudio\lib;%LIB%"
           cd pyaudio
-          python -m pip install --upgrade pip build
-          python -m build
-        shell: cmd
+          msbuild portaudio-v19/build/msvc/portaudio.sln /p:Configuration=ReleaseDLL;Platform=${{ matrix.arch }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
