@@ -1,4 +1,4 @@
-name: Build, Publish to PyPI, and Create GitHub Release
+name: Build, Publish to PyPI, and Create GitHub Release (Windows)
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install build tools
+      - name: Upgrade pip & install build
         run: python -m pip install --upgrade pip build
 
       - name: Build distributions
@@ -34,7 +34,7 @@ jobs:
 
   github-release:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -45,10 +45,12 @@ jobs:
       - name: Get version from dist filename
         id: get_version
         run: |
-          set -e
-          FILE=$(ls dist/*.tar.gz | head -n1)
-          VERSION=$(basename "$FILE" | sed -E 's/^[^-]+-([0-9]+\.[0-9]+\.[0-9]+)\.tar\.gz$/\1/')
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          $file = Get-ChildItem -Path dist\*.tar.gz | Select-Object -First 1
+          if ($file) {
+            if ($file.Name -match "^[^-]+-([0-9]+\.[0-9]+\.[0-9]+)\.tar\.gz$") {
+              echo "VERSION=$($matches[1])" >> $env:GITHUB_OUTPUT
+            }
+          }
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -57,5 +59,4 @@ jobs:
           name: Release v${{ steps.get_version.outputs.VERSION }}
           generate_release_notes: true
           files: |
-            dist/*
-
+            dist\*
